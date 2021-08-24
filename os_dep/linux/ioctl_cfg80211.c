@@ -2777,8 +2777,7 @@ static int cfg80211_rtw_change_iface(struct wiphy *wiphy,
 #ifdef CONFIG_WIFI_MONITOR
 	case NL80211_IFTYPE_MONITOR:
 		networkType = Ndis802_11Monitor;
-		ndev->type = ARPHRD_IEEE80211; /* IEEE 802.11 : 801 */
-		//ndev->type = ARPHRD_IEEE80211_RADIOTAP; /* IEEE 802.11 + radiotap header : 803 */
+		ndev->type = ARPHRD_IEEE80211_RADIOTAP; /* IEEE 802.11 + radiotap header : 803 */
 		break;
 #endif /* CONFIG_WIFI_MONITOR */
 	default:
@@ -4948,6 +4947,11 @@ static int rtw_cfg80211_monitor_if_xmit_entry(struct sk_buff *skb, struct net_de
 	if (unlikely(skb->len < rtap_len))
 		goto fail;
 
+	if (rtap_len != 14) {
+		RTW_INFO("radiotap len (should be 14): %d\n", rtap_len);
+		goto fail;
+	}
+
 	/* Skip the ratio tap header */
 	skb_pull(skb, rtap_len);
 
@@ -5152,6 +5156,11 @@ static int rtw_cfg80211_add_monitor_if(_adapter *padapter, char *name, struct ne
 	mon_wdev->netdev = mon_ndev;
 	mon_wdev->iftype = NL80211_IFTYPE_MONITOR;
 	mon_ndev->ieee80211_ptr = mon_wdev;
+
+	SET_NETDEV_DEV(mon_ndev, wiphy_dev(pwdev_priv->rtw_wdev->wiphy));
+
+	memcpy(mon_ndev->dev_addr, padapter->pnetdev->dev_addr, ETH_ALEN);
+	memcpy(mon_ndev->perm_addr, padapter->pnetdev->perm_addr, ETH_ALEN);
 
 	ret = register_netdevice(mon_ndev);
 	if (ret)

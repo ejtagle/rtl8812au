@@ -4643,6 +4643,11 @@ s32 rtw_monitor_xmit_entry(struct sk_buff *skb, struct net_device *ndev)
 	if (unlikely(skb->len < rtap_len))
 		goto fail;
 
+	if (rtap_len < 8) {
+		RTW_INFO("radiotap len (should be at least 8): %d\n", rtap_len);
+		goto fail;
+	}
+
 	len -= sizeof(struct ieee80211_radiotap_header);
 	rtap_len -= sizeof(struct ieee80211_radiotap_header);
 

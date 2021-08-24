@@ -1687,7 +1687,8 @@ static u8 is_rtw_ndev(struct net_device *ndev)
 static int rtw_ndev_notifier_call(struct notifier_block *nb, unsigned long state, void *ptr)
 {
 	struct net_device *ndev;
-
+	_adapter *adapter;
+	
 	if (ptr == NULL)
 		return NOTIFY_DONE;
 
@@ -1696,7 +1697,6 @@ static int rtw_ndev_notifier_call(struct notifier_block *nb, unsigned long state
 #else
 	ndev = ptr;
 #endif
-
 	if (ndev == NULL)
 		return NOTIFY_DONE;
 
@@ -1704,18 +1704,17 @@ static int rtw_ndev_notifier_call(struct notifier_block *nb, unsigned long state
 		return NOTIFY_DONE;
 
 	RTW_INFO(FUNC_NDEV_FMT" state:%lu\n", FUNC_NDEV_ARG(ndev), state);
-
+	adapter = rtw_netdev_priv(ndev);
+	
 	switch (state) {
 	case NETDEV_CHANGENAME:
 		rtw_adapter_proc_replace(ndev);
+		strncpy(adapter->old_ifname, ndev->name, IFNAMSIZ);
+		adapter->old_ifname[IFNAMSIZ-1] = 0;		
 		break;
 	#ifdef CONFIG_NEW_NETDEV_HDL
 	case NETDEV_PRE_UP :
-		{
-			_adapter *adapter = rtw_netdev_priv(ndev);
-
-			rtw_pwr_wakeup(adapter);
-		}
+		rtw_pwr_wakeup(adapter);
 		break;
 	#endif
 	}
@@ -2453,8 +2452,11 @@ struct dvobj_priv *devobj_init(void)
 	#endif
 #endif
 
+#ifdef PLATFORM_LINUX
+	// (note: Passing NULL as 2nd parameter is ONLY supported by linux)
 	rtw_init_timer(&(pdvobj->dynamic_chk_timer), NULL, rtw_dynamic_check_timer_handlder, pdvobj);
 	rtw_init_timer(&(pdvobj->periodic_tsf_update_end_timer), NULL, rtw_hal_periodic_tsf_update_end_timer_hdl, pdvobj);
+#endif
 
 #ifdef CONFIG_MCC_MODE
 	_rtw_mutex_init(&(pdvobj->mcc_objpriv.mcc_mutex));
