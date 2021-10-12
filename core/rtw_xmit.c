@@ -4611,7 +4611,7 @@ static void do_queue_select(_adapter	*padapter, struct pkt_attrib *pattrib)
  *	0	success, hardware will handle this xmit frame(packet)
  *	<0	fail
  */
- #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24))
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24))
 s32 rtw_monitor_xmit_entry(struct sk_buff *skb, struct net_device *ndev)
 {
 	u16 frame_ctl;
@@ -4622,6 +4622,7 @@ s32 rtw_monitor_xmit_entry(struct sk_buff *skb, struct net_device *ndev)
 	struct xmit_frame		*pmgntframe;
 	struct mlme_ext_priv	*pmlmeext = &(padapter->mlmeextpriv);
 	struct xmit_priv	*pxmitpriv = &(padapter->xmitpriv);
+	struct registry_priv	*pregpriv = &(padapter->registrypriv);
 	unsigned char	*pframe;
 	int len = skb->len;
 
@@ -4688,22 +4689,39 @@ s32 rtw_monitor_xmit_entry(struct sk_buff *skb, struct net_device *ndev)
 	// Setup attribs for default Mgmt vs Data frame
 	pwlanhdr = (struct rtw_ieee80211_hdr *)pframe;
     pattrib = &pmgntframe->attrib;
-	frame_ctl = le16_to_cpu(pwlanhdr->frame_ctl);
-	if ((frame_ctl & RTW_IEEE80211_FCTL_FTYPE) == RTW_IEEE80211_FTYPE_DATA) {
+	pattrib->injected = _TRUE;
 
-		update_monitor_frame_attrib(padapter, pattrib);
+	if (pregpriv->monitor_disable_1m) {
 
-		if (is_broadcast_mac_addr(pwlanhdr->addr3) || is_broadcast_mac_addr(pwlanhdr->addr1))
-			pattrib->rate = MGN_24M;
+		frame_ctl = le16_to_cpu(pwlanhdr->frame_ctl);
+		if ((frame_ctl & RTW_IEEE80211_FCTL_FTYPE) == RTW_IEEE80211_FTYPE_DATA) {
+
+			update_monitor_frame_attrib(padapter, pattrib);
+
+			if (is_broadcast_mac_addr(pwlanhdr->addr3) || is_broadcast_mac_addr(pwlanhdr->addr1))
+				pattrib->rate = MGN_24M;
+		} else {
+			update_mgntframe_attrib(padapter, pattrib);
+		}
 
 	} else {
 
 		update_mgntframe_attrib(padapter, pattrib);
 
+		pattrib->rate = MGN_1M;
+
+		pattrib->ldpc = _FALSE;
+		pattrib->stbc = 0;
+
 	}
-	pattrib->retry_ctrl = _FALSE;
+
+	if (pregpriv->monitor_retransmit)
+		pattrib->retry_ctrl = _TRUE;
+	else
+		pattrib->retry_ctrl = _FALSE;
 	pattrib->pktlen = len;
 
+	pattrib->last_txcmdsz = pattrib->pktlen;
 
 	/*
 		ANALYSIS: most other xmit/frame generation flows:
@@ -4732,7 +4750,9 @@ s32 rtw_monitor_xmit_entry(struct sk_buff *skb, struct net_device *ndev)
 	pattrib->seqnum = pmlmeext->mgnt_seq;
 	pmlmeext->mgnt_seq++;
 	*/
-	pattrib->last_txcmdsz = pattrib->pktlen;
+	pmlmeext->mgnt_seq++;
+
+	pattrib->retry_ctrl = _FALSE;
 
 	// Parse radiotap for injection items and overwrite attribs as needed
 	ret = ieee80211_radiotap_iterator_init(&iterator, rtap_hdr, rtap_len, NULL);
@@ -4891,7 +4911,6 @@ s32 rtw_monitor_xmit_entry(struct sk_buff *skb, struct net_device *ndev)
 	}
 
 	// All set
-
 	dump_mgntframe(padapter, pmgntframe);
 
 fail:

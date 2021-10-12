@@ -39,7 +39,7 @@ int rtw_vrtl_carrier_sense = AUTO_VCS;
 int rtw_vcs_type = RTS_CTS;
 int rtw_rts_thresh = 2347;
 int rtw_frag_thresh = 2346;
-int rtw_preamble = PREAMBLE_LONG;/* long, short, auto */
+int rtw_preamble = PREAMBLE_AUTO;/* long, short, auto */
 int rtw_scan_mode = 1;/* active, passive */
 /* int smart_ps = 1; */
 #ifdef CONFIG_POWER_SAVING
@@ -91,6 +91,13 @@ int rtw_nb_config = CONFIG_NB_VALUE;
 module_param(rtw_nb_config, int, 0644);
 MODULE_PARM_DESC(rtw_nb_config, "5M/10M/Normal bandwidth configuration");
 #endif
+int rtw_monitor_overwrite_seqnum = 0;
+module_param(rtw_monitor_overwrite_seqnum, int, 0644);
+MODULE_PARM_DESC(rtw_monitor_overwrite_seqnum, "Overwrite the sequence number of injected frames");
+
+int rtw_monitor_retransmit = 0;
+module_param(rtw_monitor_retransmit, int, 0644);
+MODULE_PARM_DESC(rtw_monitor_retransmit, "Retransmit injected frames");
 
 int rtw_monitor_disable_1m = 0;
 module_param(rtw_monitor_disable_1m, int, 0644);
@@ -1477,6 +1484,8 @@ uint loadparam(_adapter *padapter)
 #ifdef CONFIG_RTL8822C_XCAP_NEW_POLICY
 	registry_par->rtw_8822c_xcap_overwrite = (u8)rtw_8822c_xcap_overwrite;
 #endif
+	registry_par->monitor_overwrite_seqnum = (u8)rtw_monitor_overwrite_seqnum;
+	registry_par->monitor_retransmit = (u8)rtw_monitor_retransmit;
 	registry_par->monitor_disable_1m = (u8)rtw_monitor_disable_1m;
 
 	return status;

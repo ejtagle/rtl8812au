@@ -2505,7 +2505,7 @@ static int rtw_wx_set_rate(struct net_device *dev,
 {
 	int ret = 0;
 #if 0
-	int i;
+	int	i;
 	_adapter *padapter = (_adapter *)rtw_netdev_priv(dev);
 	u8	datarates[NumRates];
 	u32	target_rate = wrqu->bitrate.value;

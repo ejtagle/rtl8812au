@@ -553,6 +553,7 @@ FirmwareDownload8812(
 				if (IS_HARDWARE_TYPE_8821(Adapter)) {
 					pFirmware->szFwBuffer = array_mp_8821a_fw_wowlan;
 					pFirmware->ulFwLength = array_length_mp_8821a_fw_wowlan;
+				}
 #endif
 				RTW_INFO("%s fw:%s, size: %d\n", __func__, "WoWLAN", pFirmware->ulFwLength);
 
@@ -571,6 +572,7 @@ FirmwareDownload8812(
 				if (IS_HARDWARE_TYPE_8821(Adapter)) {
 					pFirmware->szFwBuffer = array_mp_8821a_fw_ap;
 					pFirmware->ulFwLength = array_length_mp_8821a_fw_ap;
+				}
 #endif
 
 				RTW_INFO("%s fw: %s, size: %d\n", __func__, "AP_WoWLAN", pFirmware->ulFwLength);

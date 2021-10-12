@@ -1127,6 +1127,16 @@ void phydm_rx_physts_1st_type(struct dm_struct *dm,
 
 		phy_info->rx_pwdb_all = rssi;
 		phy_info->rx_mimo_signal_strength[0] = rssi;
+
+		// fill per path rx power info 
+        for (i = RF_PATH_A; i < dm->num_rf_path; i++) {
+                if (i < RF_PATH_C)
+                        val = phy_sts->gain_trsw[i];
+                else
+                        val = phy_sts->gain_trsw_cd[i - 2];
+
+                phy_info->rx_pwr[i] = (val & 0x7F) - 110;			
+		}
 	} else {
 	/* @== [OFDM rate] ===================================================*/
 		for (i = RF_PATH_A; i < dm->num_rf_path; i++) {
