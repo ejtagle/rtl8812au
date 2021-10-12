@@ -3860,6 +3860,8 @@ int recv_frame_monitor(_adapter *padapter, union recv_frame *rframe)
 			ret = _FAIL;
 			goto exit;
 		}
+	} else {
+		printk("RTW: No radiotap??\n");
 	}
 
 	/* write skb information to recv frame */
