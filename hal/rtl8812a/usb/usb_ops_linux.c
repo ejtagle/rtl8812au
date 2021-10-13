@@ -129,8 +129,14 @@ int recvbuf2recvframe(PADAPTER padapter, void *ptr)
 #ifdef CONFIG_USB_RX_AGGREGATION
 	pkt_cnt = GET_RX_STATUS_DESC_USB_AGG_PKTNUM_8812(pbuf);
 #endif
+#if 0
+	printk("RTW: recvbuf2recvframe: pkt_cnt: %d\n", pkt_cnt);
+#endif
 
 	do {
+#if 0
+		printk("RTW: recvbuf2recvframe: pkt_cnt: %d, transfer_len:%d\n", pkt_cnt, transfer_len);
+#endif	
 		precvframe = rtw_alloc_recvframe(pfree_recv_queue);
 		if (precvframe == NULL) {
 			RTW_INFO("%s()-%d: rtw_alloc_recvframe() failed! RX Drop!\n", __FUNCTION__, __LINE__);
